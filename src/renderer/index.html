@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TheChilledLemonium Browser</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #10141b;
+        color: #ecf0f1;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-bottom: 1px solid #2c3e50;
+        background: #121a24;
+      }
+      button,
+      input {
+        border: 1px solid #2c3e50;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 14px;
+        background: #18222e;
+        color: #ecf0f1;
+      }
+      button:hover {
+        cursor: pointer;
+        background: #203245;
+      }
+      #url {
+        flex: 1;
+      }
+      webview {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button id="back">←</button>
+      <button id="forward">→</button>
+      <button id="reload">⟳</button>
+      <input id="url" value="https://duckduckgo.com" />
+      <button id="go">Go</button>
+    </div>
+
+    <webview id="browser" src="https://duckduckgo.com" allowpopups></webview>
+
+    <script>
+      const browser = document.getElementById('browser');
+      const urlInput = document.getElementById('url');
+
+      const navigate = () => {
+        const candidate = urlInput.value.trim();
+        if (!candidate) return;
+        const hasProtocol = /^https?:\/\//i.test(candidate);
+        browser.src = hasProtocol ? candidate : `https://${candidate}`;
+      };
+
+      document.getElementById('go').addEventListener('click', navigate);
+      document.getElementById('back').addEventListener('click', () => browser.canGoBack() && browser.goBack());
+      document.getElementById('forward').addEventListener('click', () => browser.canGoForward() && browser.goForward());
+      document.getElementById('reload').addEventListener('click', () => browser.reload());
+      urlInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') navigate();
+      });
+
+      browser.addEventListener('did-navigate', () => {
+        urlInput.value = browser.getURL();
+      });
+
+      window.nativeBrowser.onAction(({ type }) => {
+        if (type === 'back' && browser.canGoBack()) browser.goBack();
+        if (type === 'forward' && browser.canGoForward()) browser.goForward();
+        if (type === 'reload') browser.reload();
+      });
+    </script>
+  </body>
+</html>
